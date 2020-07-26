@@ -4,18 +4,24 @@ object Calculator {
     hasCorrectlyClosedBrackets(input) &&
     input.matches("[0-9 \\+ \\- \\( \\) \\/ \\* \\s]*")
 
-  def calculate(expression: String): Double = {
-    var input = expression.trim
-
-    while(input.matches(".*[\\(\\)]+.*")){
+  def calculate(input: String): Double = {
+    if (input.matches(".*[\\(\\)]+.*")){
       val (left, right) = getBracketsIndexTuples(input).head
-      input = input.substring(0, left) + calculate(input.substring(left + 1, right)) + input.substring(right + 1)
+      return calculate(input.substring(0, left) + calculate(input.substring(left + 1, right)) + input.substring(right + 1))
     }
-    val digitRegex = "\\d+(\\.\\d+)*".r
-    val operationRegex = "[\\+\\-\\*\\/]+".r
-    var numbers = digitRegex.findAllIn(input).toArray.map((s) => s.toDouble)
-    var operations = operationRegex.findAllIn(input).toArray
 
+    val numbers: Array[Double] = "\\d+(\\.\\d+)*".r.findAllIn(input).toArray.map((s) => s.toDouble)
+    val operations: Array[String] = "[\\+\\-\\*\\/]+".r.findAllIn(input).toArray
+
+    val (numbersFinal, _) = squashOperations(numbers, operations)
+
+    return numbersFinal(0)
+  }
+
+  private def squashOperations(numbersList: Array[Double], operationsList: Array[String]): (Array[Double], Array[String]) = {
+    var numbers = numbersList
+    var operations = operationsList
+ 
     var operationsOmitted = 0
     for(i <- 0 to operations.length - 1){
       operations(operationsOmitted) match {
@@ -49,8 +55,7 @@ object Calculator {
         case _ => operationsOmitted += 1
       }
     }
-
-    return numbers(0)
+    return (numbers, operations)
   }
 
   private def getBracketsIndexTuples(input: String): List[(Int,Int)] = {
