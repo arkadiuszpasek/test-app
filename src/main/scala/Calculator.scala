@@ -18,22 +18,23 @@ object Calculator {
       }
 
       // Match a number, or a number with '-' but only if '-' is after another expression or beginning
-      // '-' between 2 numbers means subtraction
+      // '-' between 2 numbers means subtraction operation
       val numbers: Array[Double] = "((^|\\+|\\-|\\*|\\/)\\-)*\\d+(\\.\\d+)*".r.findAllIn(input).toArray.map((s) => {
         if(s.matches("[\\+\\/\\*\\-]{2}.*")) s.replaceFirst("[\\+\\/\\*\\-]", "").toDouble else s.toDouble
       })
+
+      // Match all operators that aren't at the beginning, '-' at the beginning means negative first number
       val operations: Array[String] = "(?<!^)[\\+\\-\\*\\/]+".r.findAllIn(input).toArray.map((o) => {
         if (o.length > 1 && o.charAt(1) == '-') o.charAt(0).toString else o
       })
 
-      return Some(getSquashedParamsResult(numbers, operations))
+      return Some(getSquashedOperationsResult(numbers, operations))
     } catch {
-      
-      case e: Exception => println(e); None
+      case e: Exception => None
     }
   }
 
-  private def getSquashedParamsResult(numbersList: Array[Double], operationsList: Array[String]): Double = {
+  private def getSquashedOperationsResult(numbersList: Array[Double], operationsList: Array[String]): Double = {
     var numbers = numbersList
     var operations = operationsList
  
@@ -58,13 +59,13 @@ object Calculator {
       operations(0) match {
         case "+" => {
           operations = operations.patch(0, Nil, 1)
-          numbers = numbers.updated(0, numbers(0) + numbers(0 + 1))
-          numbers = numbers.patch(0 + 1, Nil, 1)
+          numbers = numbers.updated(0, numbers(0) + numbers(1))
+          numbers = numbers.patch(1, Nil, 1)
         }
         case "-" => {
           operations = operations.patch(0, Nil, 1)
-          numbers = numbers.updated(0, numbers(0) - numbers(0 + 1))
-          numbers = numbers.patch(0 + 1, Nil, 1)
+          numbers = numbers.updated(0, numbers(0) - numbers(1))
+          numbers = numbers.patch(1, Nil, 1)
         }
       }
     }
@@ -101,11 +102,10 @@ object Calculator {
   }
 
   private def hasCorrectlyClosedBrackets(input: String) : Boolean = {
-    var openedBrackets = 0 
-    input.toList.foreach((character) => character match {
-      case '(' => openedBrackets += 1
-      case ')' => if(openedBrackets <= 0) return false else openedBrackets -= 1
-      case _ => 
+    val openedBrackets = input.toList.foldLeft(0)((acc, c) => c match {
+      case '(' => acc + 1
+      case ')' => if(acc <= 0) return false else acc - 1
+      case _ => acc
     })
     return openedBrackets == 0
   }
