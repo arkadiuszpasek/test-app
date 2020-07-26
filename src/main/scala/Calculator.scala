@@ -4,23 +4,33 @@ object Calculator {
     input.matches("[0-9 \\d+.\\d+ \\+ \\- \\( \\) \\/ \\* \\s]*")
 
   def calculate(input: String): Option[Double] = {
-    if(!isValidInput(input)) return None
+    try{
+      if(!isValidInput(input)) return None
 
-    // Keep reducing brackets recursively
-    if (input.matches(".*[\\(\\)]+.*")){
-      val (left, right) = getBracketsIndexTuples(input).head
-      calculate(input.substring(left + 1 ,right)) match {
-        case Some(result) => return calculate(input.substring(0, left) + result.toString + input.substring(right + 1))
-        case None => return None
+      // Keep reducing brackets recursively
+      if (input.matches(".*[\\(\\)]+.*")){
+        val (left, right) = getBracketsIndexTuples(input).head
+        calculate(input.substring(left + 1 ,right)) match {
+          case Some(result) => return calculate(input.substring(0, left) + result.toString + input.substring(right + 1))
+          case None => return None
+        }
       }
+
+      // Match a number, or a number with '-' but only if '-' is after another expression or beginning
+      // '-' between 2 numbers means subtraction
+      val numbers: Array[Double] = "(^|[\\+\\-\\*\\/\\s]\\-)*\\d+(\\.\\d+)*".r.findAllIn(input).toArray.map((s) => {
+        s.replaceAll("[\\+\\/\\*]", "").toDouble
+      })
+      val operations: Array[String] = "[\\+\\-\\*\\/]+".r.findAllIn(input).toArray.map((o) => {
+        if (o.length > 1 && o.charAt(1) == '-') o.charAt(0).toString else o
+      })
+
+      val (numbersFinal, _) = getsquashedParams(numbers, operations)
+
+      return Some(numbersFinal(0))
+    } catch {
+      case e: Exception => None
     }
-
-    val numbers: Array[Double] = "\\d+(\\.\\d+)*".r.findAllIn(input).toArray.map((s) => s.toDouble)
-    val operations: Array[String] = "[\\+\\-\\*\\/]+".r.findAllIn(input).toArray
-
-    val (numbersFinal, _) = getsquashedParams(numbers, operations)
-
-    return Some(numbersFinal(0))
   }
 
   private def getsquashedParams(numbersList: Array[Double], operationsList: Array[String]): (Array[Double], Array[String]) = {
