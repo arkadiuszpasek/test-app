@@ -1,6 +1,10 @@
 # Parallel calculator
 
 ### Http server in Scala and Akka providing text calculator functionality
+Supported operations: 
+- *, /
+- +, -
+- ( )
 #### Running this project
 - Requirements: sbt
 - How to run the project locally
