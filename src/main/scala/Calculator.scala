@@ -23,18 +23,15 @@ object Calculator {
         if(s.matches("[\\+\\/\\*\\-]{2}.*")) s.replaceFirst("[\\+\\/\\*\\-]", "").toDouble else s.toDouble
       })
 
-      // Match all operators that aren't at the beginning, '-' at the beginning means negative first number
-      val operations: Array[String] = "(?<!^)[\\+\\-\\*\\/]+".r.findAllIn(input).toArray.map((o) => {
-        if (o.length > 1 && o.charAt(1) == '-') o.charAt(0).toString else o
-      })
+      val operations: Array[String] = "(?<=\\d)[\\+\\-\\*\\/]".r.findAllIn(input).toArray
 
-      return Some(getSquashedOperationsResult(numbers, operations))
+      return Some(getOperationsResult(numbers, operations))
     } catch {
       case e: Exception => None
     }
   }
 
-  private def getSquashedOperationsResult(numbersList: Array[Double], operationsList: Array[String]): Double = {
+  private def getOperationsResult(numbersList: Array[Double], operationsList: Array[String]): Double = {
     var numbers = numbersList
     var operations = operationsList
  
