@@ -29,7 +29,7 @@ object Main {
                 case Success(request) => {
                   val result = Calculator.calculate(request.expression)
                   result match {
-                    case Some(result) => complete(result.toString)
+                    case Some(result) => complete(Response(result.toString))
                     case None =>  complete(HttpResponse(StatusCodes.BadRequest)) 
                   }
                 }
@@ -38,8 +38,7 @@ object Main {
             }
         }
       }
-
-    val bindingFuture = Http().bindAndHandle(route, "localhost", 5555)
+    val bindingFuture = Http().bindAndHandle(route,"localhost", 5555)
 
     println("Listening at http://localhost:5555/evaluate\nRETURN to stop")
     StdIn.readLine()
