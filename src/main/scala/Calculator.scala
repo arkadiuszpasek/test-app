@@ -1,24 +1,29 @@
 object Calculator {
   def isValidInput(input: String): Boolean = 
-    hasMatchingBrackets(input) && 
     hasCorrectlyClosedBrackets(input) &&
-    input.matches("[0-9 \\+ \\- \\( \\) \\/ \\* \\s]*")
+    input.matches("[0-9 \\d+.\\d+ \\+ \\- \\( \\) \\/ \\* \\s]*")
 
-  def calculate(input: String): Double = {
+  def calculate(input: String): Option[Double] = {
+    if(!isValidInput(input)) return None
+
+    // Keep reducing brackets recursively
     if (input.matches(".*[\\(\\)]+.*")){
       val (left, right) = getBracketsIndexTuples(input).head
-      return calculate(input.substring(0, left) + calculate(input.substring(left + 1, right)) + input.substring(right + 1))
+      calculate(input.substring(left + 1 ,right)) match {
+        case Some(result) => return calculate(input.substring(0, left) + result.toString + input.substring(right + 1))
+        case None => return None
+      }
     }
 
     val numbers: Array[Double] = "\\d+(\\.\\d+)*".r.findAllIn(input).toArray.map((s) => s.toDouble)
     val operations: Array[String] = "[\\+\\-\\*\\/]+".r.findAllIn(input).toArray
 
-    val (numbersFinal, _) = squashOperations(numbers, operations)
+    val (numbersFinal, _) = getsquashedParams(numbers, operations)
 
-    return numbersFinal(0)
+    return Some(numbersFinal(0))
   }
 
-  private def squashOperations(numbersList: Array[Double], operationsList: Array[String]): (Array[Double], Array[String]) = {
+  private def getsquashedParams(numbersList: Array[Double], operationsList: Array[String]): (Array[Double], Array[String]) = {
     var numbers = numbersList
     var operations = operationsList
  
@@ -39,20 +44,18 @@ object Calculator {
       }
     }
 
-    operationsOmitted = 0
     for(i <- 0 to operations.length - 1){
-      operations(operationsOmitted) match {
+      operations(0) match {
         case "+" => {
-          operations = operations.patch(operationsOmitted, Nil, 1)
-          numbers = numbers.updated(operationsOmitted, numbers(operationsOmitted) + numbers(operationsOmitted + 1))
-          numbers = numbers.patch(operationsOmitted + 1, Nil, 1)
+          operations = operations.patch(0, Nil, 1)
+          numbers = numbers.updated(0, numbers(0) + numbers(0 + 1))
+          numbers = numbers.patch(0 + 1, Nil, 1)
         }
         case "-" => {
-          operations = operations.patch(operationsOmitted, Nil, 1)
-          numbers = numbers.updated(operationsOmitted, numbers(operationsOmitted) - numbers(operationsOmitted + 1))
-          numbers = numbers.patch(operationsOmitted + 1, Nil, 1)
+          operations = operations.patch(0, Nil, 1)
+          numbers = numbers.updated(0, numbers(0) - numbers(0 + 1))
+          numbers = numbers.patch(0 + 1, Nil, 1)
         }
-        case _ => operationsOmitted += 1
       }
     }
     return (numbers, operations)
@@ -96,10 +99,4 @@ object Calculator {
     })
     return openedLeftBrackets == 0
   }
-
-  private def hasMatchingBrackets(input: String): Boolean = 
-    getNumberOfChars(input, '(') == getNumberOfChars(input, ')')
-
-  private def getNumberOfChars(input: String, character: Char): Int = 
-    input.toList.foldLeft(0){(acc,c) => if(c == character) acc + 1 else acc}
 }
