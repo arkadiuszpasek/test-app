@@ -3,11 +3,12 @@ object Calculator {
     hasCorrectlyClosedBrackets(input) &&
     input.matches("[0-9 \\d+.\\d+ \\+ \\- \\( \\) \\/ \\* \\s]*")
 
-  def calculate(input: String): Option[Double] = {
+  def calculate(expression: String): Option[Double] = {
+    val input = expression.replaceAll("\\s", "")
     try{
       if(!isValidInput(input)) return None
 
-      // Keep reducing brackets recursively
+      // Reduce brackets recursively
       if (input.matches(".*[\\(\\)]+.*")){
         val (left, right) = getBracketsIndexTuples(input).head
         calculate(input.substring(left + 1 ,right)) match {
@@ -18,22 +19,21 @@ object Calculator {
 
       // Match a number, or a number with '-' but only if '-' is after another expression or beginning
       // '-' between 2 numbers means subtraction
-      val numbers: Array[Double] = "(^|[\\+\\-\\*\\/\\s]\\-)*\\d+(\\.\\d+)*".r.findAllIn(input).toArray.map((s) => {
-        s.replaceAll("[\\+\\/\\*]", "").toDouble
+      val numbers: Array[Double] = "((^|\\+|\\-|\\*|\\/)\\-)*\\d+(\\.\\d+)*".r.findAllIn(input).toArray.map((s) => {
+        if(s.matches("[\\+\\/\\*\\-]{2}.*")) s.replaceFirst("[\\+\\/\\*\\-]", "").toDouble else s.toDouble
       })
-      val operations: Array[String] = "[\\+\\-\\*\\/]+".r.findAllIn(input).toArray.map((o) => {
+      val operations: Array[String] = "(?<!^)[\\+\\-\\*\\/]+".r.findAllIn(input).toArray.map((o) => {
         if (o.length > 1 && o.charAt(1) == '-') o.charAt(0).toString else o
       })
 
-      val (numbersFinal, _) = getsquashedParams(numbers, operations)
-
-      return Some(numbersFinal(0))
+      return Some(getSquashedParamsResult(numbers, operations))
     } catch {
-      case e: Exception => None
+      
+      case e: Exception => println(e); None
     }
   }
 
-  private def getsquashedParams(numbersList: Array[Double], operationsList: Array[String]): (Array[Double], Array[String]) = {
+  private def getSquashedParamsResult(numbersList: Array[Double], operationsList: Array[String]): Double = {
     var numbers = numbersList
     var operations = operationsList
  
@@ -68,7 +68,7 @@ object Calculator {
         }
       }
     }
-    return (numbers, operations)
+    return numbers(0)
   }
 
   private def getBracketsIndexTuples(input: String): List[(Int,Int)] = {
@@ -101,12 +101,12 @@ object Calculator {
   }
 
   private def hasCorrectlyClosedBrackets(input: String) : Boolean = {
-    var openedLeftBrackets = 0 
+    var openedBrackets = 0 
     input.toList.foreach((character) => character match {
-      case '(' => openedLeftBrackets += 1
-      case ')' => if(openedLeftBrackets <= 0) return false else openedLeftBrackets -= 1
+      case '(' => openedBrackets += 1
+      case ')' => if(openedBrackets <= 0) return false else openedBrackets -= 1
       case _ => 
     })
-    return openedLeftBrackets == 0
+    return openedBrackets == 0
   }
 }
