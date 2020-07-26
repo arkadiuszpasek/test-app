@@ -1,6 +1,6 @@
 object Main {
   def main(args: Array[String]) {
-    println(Calculator.isValidInput("((1+2)/4*17"))
-    println("Hello parallel calc")
+    // println(Calculator.calculate("1+2"))
+    println(Calculator.calculate("((1-1)*2+3*(1-3+4)+10/2)"))
   }
 }
